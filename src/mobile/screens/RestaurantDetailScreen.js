@@ -11,11 +11,24 @@ import {
 } from 'react-native';
 import { fetchWithAuth } from '../services/api';
 
-export default function RestaurantDetailScreen({ restaurantId, onBack, onAddToCart }) {
+export default function RestaurantDetailScreen({
+  restaurantId,
+  cartCount = 0,
+  onBack,
+  onNavigateToCart,
+  onAddToCart,
+}) {
   const [restaurant, setRestaurant] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [justAddedId, setJustAddedId] = useState(null);
+
+  useEffect(() => {
+    if (justAddedId == null) return undefined;
+    const timer = setTimeout(() => setJustAddedId(null), 1200);
+    return () => clearTimeout(timer);
+  }, [justAddedId]);
 
   useEffect(() => {
     let active = true;
@@ -63,6 +76,15 @@ export default function RestaurantDetailScreen({ restaurantId, onBack, onAddToCa
     };
   }, [restaurantId]);
 
+  const handleAdd = (item) => {
+    const added = onAddToCart?.(item, {
+      id: restaurantId,
+      name: restaurant?.name,
+      delivery_fee: restaurant?.delivery_fee,
+    });
+    if (added !== false) setJustAddedId(item.id);
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -90,9 +112,20 @@ export default function RestaurantDetailScreen({ restaurantId, onBack, onAddToCa
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>← Vissza az éttermekhez</Text>
-        </TouchableOpacity>
+        <View style={styles.topRow}>
+          <TouchableOpacity style={styles.backButton} onPress={onBack}>
+            <Text style={styles.backButtonText}>← Vissza az éttermekhez</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.cartBtn} onPress={onNavigateToCart}>
+            <Text style={styles.cartIcon}>🛒</Text>
+            {cartCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.imageContainer}>
           {restaurant?.image_url ? (
@@ -173,9 +206,11 @@ export default function RestaurantDetailScreen({ restaurantId, onBack, onAddToCa
 
                     <TouchableOpacity
                       style={styles.addToCartBtn}
-                      onPress={() => onAddToCart?.(item)}
+                      onPress={() => handleAdd(item)}
                     >
-                      <Text style={styles.addToCartText}>+ Kosárba</Text>
+                      <Text style={styles.addToCartText}>
+                        {justAddedId === item.id ? '✓ Hozzáadva' : '+ Kosárba'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -207,6 +242,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
     fontWeight: '600',
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingRight: 16,
+  },
+  cartBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1E1E1E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  cartIcon: {
+    fontSize: 18,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#FF5722',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   imageContainer: {
     paddingHorizontal: 16,
