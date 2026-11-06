@@ -53,3 +53,20 @@ INSERT INTO menu_items (id, restaurant_id, name, description, price, category, c
 ('66666666-cccc-1111-1111-111111111111', '55555555-4444-4444-4444-444444444444', 'Zöld Smoothie', 'Spenót, banán, alma és gyömbér frissen turmixolva.', 1500, 'Italok', 150, 3, 35, 1, true),
 ('66666666-dddd-1111-1111-111111111111', '55555555-6666-6666-6666-666666666666', 'Dürüm Borjúhúsból', 'Óriás tortillába tekert friss borjúhús salátával, joghurtos szósszal.', 2200, 'Főétel', 700, 35, 60, 30, true),
 ('66666666-eeee-1111-1111-111111111111', '55555555-6666-6666-6666-666666666666', 'Baklava (3db)', 'Mézes-diós török édesség.', 1200, 'Desszert', 450, 5, 55, 25, true);
+
+-- fixing the datas
+ALTER TABLE public.menu_items 
+ALTER COLUMN price TYPE NUMERIC(10, 2) USING price::NUMERIC;
+
+UPDATE public.menu_items
+SET price = price / 100.0;
+
+ALTER TABLE public.restaurants 
+ALTER COLUMN delivery_fee TYPE NUMERIC(10, 2) USING delivery_fee::NUMERIC;
+
+UPDATE public.restaurants
+SET delivery_fee = delivery_fee / 100.0;
+
+UPDATE public.restaurants
+SET image_url = 'https://images.unsplash.com/photo-1513104890138-7c749659a591'
+WHERE category = 'Olasz';

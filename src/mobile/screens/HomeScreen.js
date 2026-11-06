@@ -31,8 +31,12 @@ function getCategoryIcon(category) {
   return '🍽️';
 }
 
-
-export default function HomeScreen({ onNavigateToAuth, onSelectRestaurant }) {
+export default function HomeScreen({
+  cartCount = 0,
+  onNavigateToAuth,
+  onNavigateToCart,
+  onSelectRestaurant,
+}) {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -119,11 +123,13 @@ export default function HomeScreen({ onNavigateToAuth, onSelectRestaurant }) {
         </View>
 
         <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.cartBtn}>
+          <TouchableOpacity style={styles.cartBtn} onPress={onNavigateToCart}>
             <Text style={styles.cartIcon}>🛒</Text>
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>0</Text>
-            </View>
+            {cartCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.profileBtn} onPress={onNavigateToAuth}>
@@ -194,7 +200,12 @@ export default function HomeScreen({ onNavigateToAuth, onSelectRestaurant }) {
 
         <View style={styles.restaurantsGrid}>
           {filteredRestaurants.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.9} onPress={() => onSelectRestaurant?.(item.id)}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.card}
+              activeOpacity={0.9}
+              onPress={() => onSelectRestaurant?.(item.id)}
+            >
               <View style={styles.cardImageContainer}>
                 {item.image_url ? (
                   <Image source={{ uri: item.image_url }} style={styles.cardImage} />
@@ -203,7 +214,7 @@ export default function HomeScreen({ onNavigateToAuth, onSelectRestaurant }) {
                     <Text style={styles.cardImagePlaceholderIcon}>🍽️</Text>
                   </View>
                 )}
-                
+
                 <TouchableOpacity
                   style={styles.favoriteBtn}
                   onPress={() => toggleFavorite(item.id)}
@@ -347,8 +358,9 @@ const styles = StyleSheet.create({
     right: -2,
     backgroundColor: '#FF5722',
     borderRadius: 10,
-    width: 18,
+    minWidth: 18,
     height: 18,
+    paddingHorizontal: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
