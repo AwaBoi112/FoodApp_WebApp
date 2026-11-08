@@ -5,6 +5,7 @@ import HomeScreen from './screens/HomeScreen';
 import AuthScreen from './screens/AuthScreen';
 import RestaurantDetailScreen from './screens/RestaurantDetailScreen';
 import CartScreen from './screens/CartScreen';
+import OrdersScreen from './screens/OrdersScreen';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
@@ -92,6 +93,7 @@ export default function App() {
           cartCount={cartCount}
           onNavigateToAuth={() => setCurrentScreen('auth')}
           onNavigateToCart={() => openCart('home')}
+          onNavigateToOrders={() => setCurrentScreen('orders')}
           onSelectRestaurant={(id) => {
             setSelectedRestaurantId(id);
             setCurrentScreen('restaurant');
@@ -122,7 +124,17 @@ export default function App() {
           onRemoveItem={handleRemoveItem}
           onClearCart={handleClearCart}
           onBack={() => setCurrentScreen(cartReturnScreen)}
-          onOrderSuccess={() => setCurrentScreen('home')}
+          onOrderSuccess={() => setCurrentScreen('orders')}
+        />
+      )}
+
+      {currentScreen === 'orders' && (
+        <OrdersScreen
+          onBack={() => setCurrentScreen('home')}
+          onSelectRestaurant={(id) => {
+            setSelectedRestaurantId(id);
+            setCurrentScreen('restaurant');
+          }}
         />
       )}
 
