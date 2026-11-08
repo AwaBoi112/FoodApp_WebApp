@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Trash2, ExternalLink } from "lucide-react";
 import { useData } from "../../context/DataContext";
+import OrdersPanel from "../../components/OrdersPanel";
+import JobsPanel from "../../components/JobsPanel";
 import "../Dashboard.css";
 
 // empty form values for a new menu item
@@ -44,10 +46,10 @@ function RestaurantDashboard() {
   }
 
   // add the new item to the menu
-  function handleAddItem(event) {
+  async function handleAddItem(event) {
     event.preventDefault();
 
-    addMenuItem({
+    await addMenuItem({
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price) || 0,
@@ -106,6 +108,7 @@ function RestaurantDashboard() {
               value={form.name}
               onChange={handleChange}
               placeholder="Pl. Marinara"
+              maxLength={50}
               required
             />
           </label>
@@ -134,6 +137,7 @@ function RestaurantDashboard() {
               value={form.description}
               onChange={handleChange}
               placeholder="Pl. Paradicsomszósz, fokhagyma, oregánó"
+              maxLength={150}
             />
           </label>
 
@@ -254,6 +258,12 @@ function RestaurantDashboard() {
           ))
         )}
       </section>
+
+      {/* incoming orders with status buttons */}
+      <OrdersPanel />
+
+      {/* job posts and applicants */}
+      <JobsPanel restaurantId={restaurant.id} />
     </main>
   );
 }

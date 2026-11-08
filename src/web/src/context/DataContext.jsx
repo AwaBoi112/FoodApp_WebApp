@@ -6,7 +6,6 @@ import { categories } from "../data/restaurants";
 const DataContext = createContext(null);
 
 const JOBS_KEY = "foodapp_jobs";
-const ORDERS_KEY = "foodapp_orders";
 
 // state that is saved to localstorage on every change (jobs only, for now)
 function useStored(key, initial) {
@@ -53,8 +52,7 @@ export function DataProvider({ children }) {
   // the restaurant of the logged in restaurant admin
   const [myRestaurant, setMyRestaurant] = useState(null);
 
-  // still local until the backend has endpoints for them
-  const [orders, setOrders] = useStored(ORDERS_KEY, []);
+  // still local until the backend has endpoints for jobs
   const [jobs, setJobs] = useStored(JOBS_KEY, []);
 
   // load everything the current user can see
@@ -135,14 +133,6 @@ export function DataProvider({ children }) {
     await reload();
   }
 
-  // ---------- orders (local, only for the restaurant panel for now) ----------
-
-  function setOrderStatus(orderId, status) {
-    setOrders((current) =>
-      current.map((o) => (o.id === orderId ? { ...o, status } : o))
-    );
-  }
-
   // ---------- jobs (local for now) ----------
 
   function addJob(restaurantId, { title, type, description }) {
@@ -201,8 +191,6 @@ export function DataProvider({ children }) {
         toggleActive,
         addMenuItem,
         removeMenuItem,
-        orders,
-        setOrderStatus,
         jobs,
         addJob,
         removeJob,
