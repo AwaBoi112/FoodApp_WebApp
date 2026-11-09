@@ -89,6 +89,7 @@ function mapOrder(row) {
     address: row.delivery_address,
     status: row.status,
     createdAt: row.created_at,
+    customerName: row.profiles?.full_name || "Vásárló",
   };
 }
 
@@ -201,4 +202,15 @@ export function addMenuItem(item) {
 
 export function deleteMenuItem(itemId) {
   return request("DELETE", `/api/manage/mine/menu/${itemId}`);
+}
+
+// orders of my restaurant
+export async function fetchRestaurantOrders() {
+  const rows = await get("/api/orders/restaurant");
+  return rows.map(mapOrder);
+}
+
+// change the status of an order
+export function changeOrderStatus(orderId, status) {
+  return request("PATCH", `/api/orders/${orderId}/status`, { status });
 }
