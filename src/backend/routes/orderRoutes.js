@@ -1,8 +1,8 @@
 import express from 'express';
-import { createOrder, getMyOrders, getUserOrders } from '../controllers/orderController.js';
 import {
   createOrder,
   getUserOrders,
+  getMyOrders,
   getRestaurantOrders,
   updateOrderStatus,
 } from '../controllers/orderController.js';

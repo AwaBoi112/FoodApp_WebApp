@@ -87,6 +87,16 @@ export const getMyOrders = async (req, res) => {
       .from('orders')
       .select('*, restaurants(name, category), order_items(*, menu_items(*))')
       .eq('customer_id', req.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // orders of the restaurant of the logged in restaurant admin
 export const getRestaurantOrders = async (req, res) => {
   try {
