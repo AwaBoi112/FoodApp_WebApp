@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { fetchWithAuth } from '../services/api';
 
@@ -27,6 +28,7 @@ export default function CartScreen({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
 
   const deliveryFee = cartItems.length > 0 ? roundMoney(deliveryFeeProp) : 0;
   const itemsTotal = roundMoney(
@@ -37,19 +39,34 @@ export default function CartScreen({
   const handleCheckout = async () => {
     if (cartItems.length === 0 || loading) return;
 
+    if (!restaurantId) {
+      setErrorMessage('Nem sikerült azonosítani az éttermet. Térj vissza az étlaphoz, és próbáld újra.');
+      return;
+    }
+
+    if (!deliveryAddress.trim()) {
+      setErrorMessage('Add meg a szállítási címedet a rendelés leadásához.');
+      return;
+    }
+
     setLoading(true);
     setErrorMessage('');
 
     try {
       const orderPayload = {
+        restaurant_id: restaurantId,
+        delivery_address: deliveryAddress.trim(),
+        delivery_fee: deliveryFee,
+        total_price: grandTotal,
+        total_calories: cartItems.reduce(
+          (sum, item) => sum + Number(item.calories || 0) * item.quantity,
+          0
+        ),
         items: cartItems.map((item) => ({
-          menuItemId: item.id,
+          menu_item_id: item.id,
           quantity: item.quantity,
           price: item.price,
         })),
-        restaurantId,
-        totalAmount: grandTotal,
-        deliveryFee: deliveryFee,
       };
 
       await fetchWithAuth('/orders', {
@@ -197,6 +214,18 @@ export default function CartScreen({
             <Text style={styles.totalValue}>{grandTotal} lej</Text>
           </View>
         </View>
+
+        <View style={styles.addressCard}>
+          <Text style={styles.summaryTitle}>Szállítási cím</Text>
+          <TextInput
+            style={styles.addressInput}
+            value={deliveryAddress}
+            onChangeText={setDeliveryAddress}
+            placeholder="Utca, házszám, város"
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -341,6 +370,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EFEBE4',
     marginBottom: 30,
+  },
+  addressCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#EFEBE4',
+    marginBottom: 24,
+  },
+  addressInput: {
+    borderWidth: 1,
+    borderColor: '#EFEBE4',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1A1A1A',
   },
   summaryTitle: {
     fontSize: 16,

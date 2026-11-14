@@ -48,7 +48,7 @@ CREATE TABLE menu_items (
   restaurant_id uuid NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
   name text NOT NULL,
   description text,
-  price int NOT NULL,
+  price numeric(10, 2) NOT NULL,
   category text NOT NULL,
   calories int,
   protein int,
@@ -74,7 +74,7 @@ CREATE TABLE orders (
   restaurant_id uuid NOT NULL REFERENCES restaurants(id),
   courier_id uuid REFERENCES courier_details(id),
   status order_status DEFAULT 'PENDING',
-  total_price int NOT NULL,
+  total_price numeric(10, 2) NOT NULL,
   total_calories int,
   delivery_address text NOT NULL,
   created_at timestamp DEFAULT now()
@@ -85,7 +85,7 @@ CREATE TABLE order_items (
   order_id uuid NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   menu_item_id uuid NOT NULL REFERENCES menu_items(id),
   quantity int NOT NULL DEFAULT 1,
-  price_at_time int NOT NULL
+  price_at_time numeric(10, 2) NOT NULL
 );
 
 CREATE TABLE reviews (
@@ -112,7 +112,7 @@ CREATE TABLE job_application (
 ALTER TABLE restaurants
   ADD COLUMN category text,
   ADD COLUMN image_url text,
-  ADD COLUMN delivery_fee int DEFAULT 0,
+  ADD COLUMN delivery_fee numeric(10, 2) DEFAULT 0,
   ADD COLUMN delivery_time_min int,
   ADD COLUMN delivery_time_max int;
 
@@ -147,7 +147,7 @@ ALTER TABLE job_application
 ALTER TABLE restaurants ALTER COLUMN owner_id DROP NOT NULL;
 ALTER TABLE restaurants ADD COLUMN invite_code text UNIQUE;
 
-ALTER TABLE orders ADD COLUMN delivery_fee integer NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN delivery_fee numeric(10, 2) NOT NULL DEFAULT 0;
 
 CREATE TABLE job_posts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -81,6 +81,12 @@ export const getUserOrders = async (req, res) => {
   }
 };
 
+export const getMyOrders = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, restaurants(name, category), order_items(*, menu_items(*))')
+      .eq('customer_id', req.user.id)
 // orders of the restaurant of the logged in restaurant admin
 export const getRestaurantOrders = async (req, res) => {
   try {

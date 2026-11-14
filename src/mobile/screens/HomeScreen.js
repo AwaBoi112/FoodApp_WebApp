@@ -35,6 +35,7 @@ export default function HomeScreen({
   cartCount = 0,
   onNavigateToAuth,
   onNavigateToCart,
+  onNavigateToOrders,
   onSelectRestaurant,
 }) {
   const [restaurants, setRestaurants] = useState([]);
@@ -123,6 +124,10 @@ export default function HomeScreen({
         </View>
 
         <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.profileBtn} onPress={onNavigateToOrders}>
+            <Text style={styles.profileIcon}>🧾</Text>
+          </TouchableOpacity>
+          
           <TouchableOpacity style={styles.cartBtn} onPress={onNavigateToCart}>
             <Text style={styles.cartIcon}>🛒</Text>
             {cartCount > 0 && (
