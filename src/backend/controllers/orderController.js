@@ -69,7 +69,7 @@ export const getUserOrders = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('orders')
-      .select('*, restaurants(name, category), order_items(*, menu_items(*))')
+      .select('*, restaurants(name, category), reviews(rating, comment), order_items(*, menu_items(*))')
       .eq('customer_id', userId)
       .order('created_at', { ascending: false });
 
@@ -87,11 +87,76 @@ export const getMyOrders = async (req, res) => {
       .from('orders')
       .select('*, restaurants(name, category), order_items(*, menu_items(*))')
       .eq('customer_id', req.user.id)
+// orders of the restaurant of the logged in restaurant admin
+export const getRestaurantOrders = async (req, res) => {
+  try {
+    const { data: mine } = await supabase
+      .from('restaurants')
+      .select('id')
+      .eq('owner_id', req.user.id)
+      .maybeSingle();
+
+    if (!mine) return res.status(404).json({ error: 'Nincs étterem a fiókodhoz.' });
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, profiles!orders_customer_id_fkey(full_name), order_items(*, menu_items(*))')
+      .eq('restaurant_id', mine.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// allowed status changes for a restaurant
+const allowedChanges = {
+  PENDING: ['ACCEPTED', 'CANCELLED'],
+  ACCEPTED: ['PREPARING', 'CANCELLED'],
+  PREPARING: ['READY'],
+};
+
+// change the status of an order of the own restaurant
+export const updateOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const { data: mine } = await supabase
+      .from('restaurants')
+      .select('id')
+      .eq('owner_id', req.user.id)
+      .maybeSingle();
+
+    if (!mine) return res.status(404).json({ error: 'Nincs étterem a fiókodhoz.' });
+
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id, status, restaurant_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    // the order must exist and belong to this restaurant
+    if (!order || order.restaurant_id !== mine.id) {
+      return res.status(404).json({ error: 'Nincs ilyen rendelés.' });
+    }
+
+    const allowed = allowedChanges[order.status] || [];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ error: 'Ez az állapotváltás nem megengedett.' });
+    }
+
+    const { error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.status(200).json({ message: 'Állapot frissítve.', status });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

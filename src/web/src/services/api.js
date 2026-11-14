@@ -89,6 +89,11 @@ function mapOrder(row) {
     address: row.delivery_address,
     status: row.status,
     createdAt: row.created_at,
+    customerName: row.profiles?.full_name || "Vásárló",
+    // supabase returns one object (not a list) for a unique relation
+    review: Array.isArray(row.reviews)
+      ? row.reviews[0] || null
+      : row.reviews || null,
   };
 }
 
@@ -201,4 +206,24 @@ export function addMenuItem(item) {
 
 export function deleteMenuItem(itemId) {
   return request("DELETE", `/api/manage/mine/menu/${itemId}`);
+}
+
+// orders of my restaurant
+export async function fetchRestaurantOrders() {
+  const rows = await get("/api/orders/restaurant");
+  return rows.map(mapOrder);
+}
+
+// change the status of an order
+export function changeOrderStatus(orderId, status) {
+  return request("PATCH", `/api/orders/${orderId}/status`, { status });
+}
+
+// rate a delivered order
+export function createReview({ orderId, rating, comment }) {
+  return request("POST", "/api/reviews", {
+    order_id: orderId,
+    rating,
+    comment,
+  });
 }
