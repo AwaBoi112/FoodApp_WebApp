@@ -90,6 +90,10 @@ function mapOrder(row) {
     status: row.status,
     createdAt: row.created_at,
     customerName: row.profiles?.full_name || "Vásárló",
+    // supabase returns one object (not a list) for a unique relation
+    review: Array.isArray(row.reviews)
+      ? row.reviews[0] || null
+      : row.reviews || null,
   };
 }
 
@@ -213,4 +217,13 @@ export async function fetchRestaurantOrders() {
 // change the status of an order
 export function changeOrderStatus(orderId, status) {
   return request("PATCH", `/api/orders/${orderId}/status`, { status });
+}
+
+// rate a delivered order
+export function createReview({ orderId, rating, comment }) {
+  return request("POST", "/api/reviews", {
+    order_id: orderId,
+    rating,
+    comment,
+  });
 }

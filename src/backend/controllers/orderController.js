@@ -69,7 +69,7 @@ export const getUserOrders = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('orders')
-      .select('*, restaurants(name, category), order_items(*, menu_items(*))')
+      .select('*, restaurants(name, category), reviews(rating, comment), order_items(*, menu_items(*))')
       .eq('customer_id', userId)
       .order('created_at', { ascending: false });
 
