@@ -67,6 +67,15 @@ ALTER COLUMN delivery_fee TYPE NUMERIC(10, 2) USING delivery_fee::NUMERIC;
 UPDATE public.restaurants
 SET delivery_fee = delivery_fee / 100.0;
 
+UPDATE public.orders AS orders
+SET delivery_fee = restaurants.delivery_fee,
+    total_price = orders.total_price / 100.0
+FROM public.restaurants AS restaurants
+WHERE orders.restaurant_id = restaurants.id;
+
+UPDATE public.order_items
+SET price_at_time = price_at_time / 100.0;
+
 UPDATE public.restaurants
 SET image_url = 'https://images.unsplash.com/photo-1513104890138-7c749659a591'
 WHERE category = 'Olasz';

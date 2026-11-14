@@ -1,11 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-const defaultHost =
-  Platform.OS === 'web' ? window.location.hostname : '192.168.1.2';
+const getDefaultHost = () => {
+  if (Platform.OS === 'web') return window.location.hostname;
+
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) return hostUri.split(':')[0];
+
+  return Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+};
 
 export const API_BASE_URL = (
-  process.env.EXPO_PUBLIC_API_URL || `http://${defaultHost}:3000/api`
+  process.env.EXPO_PUBLIC_API_URL || `http://${getDefaultHost()}:3000/api`
 ).replace(/\/+$/, '');
 
 export const fetchWithAuth = async (endpoint, options = {}) => {

@@ -8,22 +8,61 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { fetchWithAuth } from '../services/api';
 
 const ORDER_STATUSES = {
   pending: { label: 'Feldolgozás alatt ⏳', step: 1 },
+  accepted: { label: 'Feldolgozás alatt ⏳', step: 1 },
   in_preparation: { label: 'Készítés alatt 🍳', step: 2 },
+  ready: { label: 'Készítés alatt 🍳', step: 2 },
   on_the_way: { label: 'Futárnál 🛵', step: 3 },
   delivered: { label: 'Kiszállítva 🍕', step: 4 },
   cancelled: { label: 'Törölve ❌', step: 0 },
+};
+
+const normalizeOrder = (order) => {
+  const statuses = {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    PREPARING: 'in_preparation',
+    READY: 'ready',
+    DELIVERING: 'on_the_way',
+    DELIVERED: 'delivered',
+    CANCELLED: 'cancelled',
+  };
+  const restaurant = Array.isArray(order.restaurants)
+    ? order.restaurants[0]
+    : order.restaurants;
+
+  return {
+    id: order.id,
+    restaurantName: restaurant?.name || 'Étterem',
+    status: statuses[order.status] || String(order.status).toLowerCase(),
+    createdAt: order.created_at
+      ? new Date(order.created_at).toLocaleString('hu-HU')
+      : '',
+    totalAmount: order.total_price,
+    items: (order.order_items || []).map((orderItem) => {
+      const menuItem = Array.isArray(orderItem.menu_items)
+        ? orderItem.menu_items[0]
+        : orderItem.menu_items;
+
+      return {
+        id: orderItem.id,
+        name: menuItem?.name || 'Törölt étel',
+        quantity: orderItem.quantity,
+        price: orderItem.price_at_time,
+      };
+    }),
+  };
 };
 
 export default function OrdersScreen({ onBack, onSelectRestaurant }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     loadOrders();
@@ -32,32 +71,14 @@ export default function OrdersScreen({ onBack, onSelectRestaurant }) {
   const loadOrders = async () => {
     try {
       const data = await fetchWithAuth('/orders');
-      setOrders(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) {
+        throw new Error('A szerver érvénytelen rendeléslistát küldött.');
+      }
+      setOrders(data.map(normalizeOrder));
+      setErrorMessage('');
     } catch (error) {
-      console.log('Rendelések betöltési hiba, tartalék adatok használata:', error);
-      setOrders([
-        {
-          id: 'ord-101',
-          restaurantName: 'Szaftos Burger',
-          status: 'in_preparation',
-          createdAt: '2026-10-27 15:30',
-          totalAmount: 4790,
-          items: [
-            { id: '1', name: 'Dupla Húsos Burger', quantity: 1, price: 3200 },
-            { id: '2', name: 'Kézműves Cola', quantity: 1, price: 800 },
-          ],
-        },
-        {
-          id: 'ord-100',
-          restaurantName: 'Napoli Pizza',
-          status: 'delivered',
-          createdAt: '2026-10-25 18:45',
-          totalAmount: 3500,
-          items: [
-            { id: '3', name: 'Margherita Pizza', quantity: 1, price: 3000 },
-          ],
-        },
-      ]);
+      console.error('Rendelések betöltési hiba:', error);
+      setErrorMessage(error.message || 'Nem sikerült betölteni a rendeléseket.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,6 +119,12 @@ export default function OrdersScreen({ onBack, onSelectRestaurant }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#FF5722']} />
         }
       >
+        {errorMessage ? (
+          <Text style={styles.errorText}>
+            {errorMessage} Húzd le a listát az újrapróbálkozáshoz.
+          </Text>
+        ) : null}
+
         {activeOrders.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Folyamatban lévő rendelés</Text>
@@ -171,7 +198,7 @@ export default function OrdersScreen({ onBack, onSelectRestaurant }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Korábbi rendelések</Text>
 
-          {pastOrders.length === 0 && activeOrders.length === 0 ? (
+          {pastOrders.length === 0 && activeOrders.length === 0 && !errorMessage ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>📜</Text>
               <Text style={styles.emptyTitle}>Még nem adtál le rendelést</Text>
@@ -224,6 +251,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     color: '#666666',
+  },
+  errorText: {
+    color: '#C62828',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 16,
   },
   header: {
     flexDirection: 'row',
