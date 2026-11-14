@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchMyOrders } from "../services/api";
 import { statusLabels } from "../data/orderStatus";
+import ReviewForm from "../components/ReviewForm";
 import "./Dashboard.css";
 import "./OrdersPage.css";
 
@@ -15,11 +16,16 @@ function OrdersPage({ onReorder }) {
   const [loading, setLoading] = useState(true);
 
   // load the orders of the logged in customer from the database
-  useEffect(() => {
-    fetchMyOrders(user.id)
+  function loadOrders() {
+    return fetchMyOrders(user.id)
       .then(setOrders)
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
   // fill the cart again and open it
@@ -90,6 +96,22 @@ function OrdersPage({ onReorder }) {
                   <RotateCcw size={16} /> Újrarendelés
                 </button>
               </div>
+
+              {/* rating: only for delivered orders */}
+              {order.status === "DELIVERED" &&
+                (order.review ? (
+                  <div className="review-done">
+                    <span className="rating">
+                      <Star size={15} fill="currentColor" />{" "}
+                      {order.review.rating}/5
+                    </span>
+                    {order.review.comment && (
+                      <span>{order.review.comment}</span>
+                    )}
+                  </div>
+                ) : (
+                  <ReviewForm orderId={order.id} onSaved={loadOrders} />
+                ))}
             </article>
           ))}
         </div>
